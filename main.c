@@ -2,6 +2,17 @@
 #include <sys/mman.h>
 #include <string.h>
 
+
+/* Toy Brainfuck compiler which injects code directly in memory then proceeds
+ * to execute it. Does not support the input operator ",".
+ *
+ * Designed for x86-64, on OS X El Capitan (should work on earlier versions).
+ *
+ * Register allocation:
+ * r8 => ptr
+ * r9 => pointer to start of memory allocated for the Brainfuck program
+ */
+
 void emit(int *offset, char *buffer, char *code, int n) {
     memcpy(buffer+*offset, code, n);
     *offset += n;
