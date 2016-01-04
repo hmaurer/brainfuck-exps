@@ -13,26 +13,26 @@
  * r9 => pointer to start of memory allocated for the Brainfuck program
  */
 
-void emit(int *offset, char *buffer, char *code, int n) {
+void emit(int *offset, unsigned char *buffer, unsigned char *code, int n) {
     memcpy(buffer+*offset, code, n);
     *offset += n;
 }
 
-void write_long(int offset, char *buffer, long v) {
+void write_long(int offset, unsigned char *buffer, long v) {
     char *p = (char*)&v;
     for (int i = 0; i < 8; i++) {
         buffer[offset+i] = p[i];
     }
 }
 
-void write_int(int offset, char *buffer, int v) {
+void write_int(int offset, unsigned char *buffer, int v) {
     char *p = (char*)&v;
     for (int i = 0; i < 4; i++) {
         buffer[offset+i] = p[i];
     }
 }
 
-void block(int *offset, char *buffer) {
+void block(int *offset, unsigned char *buffer) {
     int soffset = *offset;
     char c;
     while ((c = getchar()) != EOF) {
@@ -41,14 +41,14 @@ void block(int *offset, char *buffer) {
                 unsigned char code[3] = {
                     0x49, 0xFF, 0xC0 // inc r8
                 };
-                emit(offset, buffer, (char*)code, sizeof(code));
+                emit(offset, buffer, code, sizeof(code));
                 break;
             }
             case '<': {
                 unsigned char code[3] = {
                     0x49, 0xFF, 0xC8 // dec r8
                 };
-                emit(offset, buffer, (char*)code, sizeof(code));
+                emit(offset, buffer, code, sizeof(code));
                 break;
             }
             case '+': {
@@ -57,7 +57,7 @@ void block(int *offset, char *buffer) {
                     0xFE, 0xC0, // inc al
                     0x43, 0x88, 0x04, 0x01 // mov BYTE PTR [r9+r8*1], al
                 };
-                emit(offset, buffer, (char*)code, sizeof(code));
+                emit(offset, buffer, code, sizeof(code));
                 break;
             }
             case '-': {
@@ -66,7 +66,7 @@ void block(int *offset, char *buffer) {
                     0xFE, 0xC8, // inc al
                     0x43, 0x88, 0x04, 0x01 // mov BYTE PTR [r9+r8*1], al
                 };
-                emit(offset, buffer, (char*)code, sizeof(code));
+                emit(offset, buffer, code, sizeof(code));
                 break;
             }
             case '.': {
@@ -77,7 +77,7 @@ void block(int *offset, char *buffer) {
                      0x48, 0xC7, 0xC2, 0x01, 0x00, 0x00, 0x00, // mov rdx,0x1
                      0x0F, 0x05 // syscall
                 };
-                emit(offset, buffer, (char*)code, sizeof(code));
+                emit(offset, buffer, code, sizeof(code));
                 break;
             }
             case ',':
@@ -88,7 +88,7 @@ void block(int *offset, char *buffer) {
                     0x0F, 0x84, // conditional near jump if equal
                     0x00, 0x00, 0x00, 0x00 // placeholder for delta, to be completed when closing loop
                 };
-                emit(offset, buffer, (char*)code, sizeof(code));
+                emit(offset, buffer, code, sizeof(code));
                 // start a new block
                 block(offset, buffer);
                 break;
@@ -99,11 +99,11 @@ void block(int *offset, char *buffer) {
                     0x00, 0x00, 0x00, 0x00 // placeholder for delta
                 };
                 // fill conditional jump delta
-                write_int(1, (char*)code, soffset - (*offset+5) - 11);
+                write_int(1, code, soffset - (*offset+5) - 11);
                 // emit unconditional jump
-                emit(offset, buffer, (char*)code, sizeof(code));
+                emit(offset, buffer, code, sizeof(code));
                 // fill unconditional jump delta
-                write_int(soffset - 4, (char*)buffer, *offset - soffset);
+                write_int(soffset - 4, buffer, *offset - soffset);
                 // return back to parent block
                 return;
             }
@@ -122,15 +122,15 @@ int main(void) {
         0x49, 0xB9, // mov r9, ...
         0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 // address of memory block
     };
-    write_long(9, (char*)prologue, (long)&mem);
-    emit(&offset, (char*)buffer, (char*)prologue, sizeof(prologue));
+    write_long(9, prologue, (long)&mem);
+    emit(&offset, buffer, prologue, sizeof(prologue));
 
-    block(&offset, (char*)buffer);
+    block(&offset, buffer);
 
     unsigned char epilogue[1] = {
         0xc3 // ret
     };
-    emit(&offset, (char*)buffer, (char*)epilogue, sizeof(epilogue));
+    emit(&offset, buffer, epilogue, sizeof(epilogue));
 
     void *p = mmap(0, sizeof(buffer), PROT_READ|PROT_WRITE|PROT_EXEC, MAP_ANON | MAP_PRIVATE, -1, 0);
     memcpy(p, buffer, sizeof(buffer));
