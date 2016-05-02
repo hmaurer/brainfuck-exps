@@ -63,7 +63,7 @@ void block(int *offset, unsigned char *buffer) {
             case '-': {
                 unsigned char code[10] = {
                     0x43, 0x8A, 0x04, 0x01, // mov al,BYTE PTR [r9+r8*1]
-                    0xFE, 0xC8, // inc al
+                    0xFE, 0xC8, // dec al
                     0x43, 0x88, 0x04, 0x01 // mov BYTE PTR [r9+r8*1], al
                 };
                 emit(offset, buffer, code, sizeof(code));
