@@ -20,14 +20,14 @@ void emit(int *offset, unsigned char *buffer, unsigned char *code, int n) {
 
 void write_long(int offset, unsigned char *buffer, long v) {
     char *p = (char*)&v;
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < sizeof(long); i++) {
         buffer[offset+i] = p[i];
     }
 }
 
 void write_int(int offset, unsigned char *buffer, int v) {
     char *p = (char*)&v;
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < sizeof(int); i++) {
         buffer[offset+i] = p[i];
     }
 }
